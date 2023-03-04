@@ -36,8 +36,10 @@ server.get('/favorite', favoriteHandler);
 //server.get('/error', errorHandlerr);
 server.get('/trend', trendingHandler);
 server.get('/search', searchHandler);
-server.get('getMovies',getMoviesHandler);
-server.post('getMovies',addMoviesHandler);
+server.get('/getMovies',getMoviesHandler);
+server.post('/getMovies',addMoviesHandler);
+server.delete('/getMovies/:id',deleteFavMovie);
+server.put('/getMovies/:id',updateFavMovie);
 server.get('*', defaultHandler);
 server.use(errorHandler);
 
@@ -133,9 +135,11 @@ function errorHandler(erorr, req, res) {
 }
 
 function getMoviesHandler(req,res){
-    const sql=`SELECT * FROM favmovie;`;
+    const sql=`SELECT * FROM favMovie;`;
     client.query(sql).then((data) =>{
+        console.log(data.rows);
         res.send(data.rows);
+
     })
     .catch(error=>{
         errorHandler(error,req,res);
@@ -159,6 +163,31 @@ function addMoviesHandler(req,res){
 
 }
 
+function deleteFavMovie(req,res) {
+    console.log(req.params);
+    const id = req.params.id;
+    const sql = `DELETE FROM favMovie WHERE id=${id}`;
+    client.query(sql)
+    .then((data)=>{
+        res.status(204).json({});
+    })
+    .catch((err)=>{
+        errorHandler(err,req,res);
+    })
+}
+
+function updateFavMovie(req,res){
+    const id = req.params.id;
+    const movie=req.body;
+    const sql=`UPDATE favMovie SET title=$1, release_date=$2, poster_path=$3 , overview=$4 WHERE id=${id} RETURNING *`;
+    const value=[movie.title,movie.release_date, movie.poster_path, movie.overview];
+    client.query(sql,value).then((data)=>{
+        res.status(200).send(data.rows);
+    })
+    .catch((err)=>{
+        errorHandler(err,req,res);
+    })
+}
 client.connect().then(() => {
     server.listen(PORT, () => {
         console.log(`listening on ${PORT} : I am ready`);
