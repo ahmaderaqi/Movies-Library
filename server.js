@@ -1,7 +1,10 @@
 const express = require('express');
 const server = express();
 const cors = require('cors');
+const pg = require('pg')
 server.use(cors());
+server.use(express.json());
+
 //server.use(errorHandler);
 const axios = require('axios');
 require('dotenv').config();
@@ -18,6 +21,9 @@ const error500 = require('./errors/error500.json');
 
 const PORT = 3000;
 
+//create an object from client constructor 
+const client = new pg.Client(process.env.DATABASE_URL);
+
 function Data(id, title, release_date, poster_path, overview) {
     this.title = title;
     this.poster_path = poster_path;
@@ -25,12 +31,13 @@ function Data(id, title, release_date, poster_path, overview) {
     this.id = id;
     this.release_date = release_date;
 }
-
 server.get('/', homeHandler);
 server.get('/favorite', favoriteHandler);
 //server.get('/error', errorHandlerr);
 server.get('/trend', trendingHandler);
 server.get('/search', searchHandler);
+server.get('getMovies',getMoviesHandler);
+server.post('getMovies',addMoviesHandler);
 server.get('*', defaultHandler);
 server.use(errorHandler);
 
@@ -86,31 +93,31 @@ function trendingHandler(req, res) {
 
 function searchHandler(req, res) {
     let name = "The Woman King";
-     try {
-    const APIkey = process.env.api_key;
-    let url = `https://api.themoviedb.org/3/search/movie?api_key=${APIkey}&language=en-US&query=The&page=2`;
+    try {
+        const APIkey = process.env.api_key;
+        let url = `https://api.themoviedb.org/3/search/movie?api_key=${APIkey}&language=en-US&query=The&page=2`;
 
 
-    axios.get(url)
-        .then((result) => {
-            let movie = "";
-            result.data.results.forEach((item) => {
-                if (item.title == name) {
-                    let singleRecipe = new Data(item.id, item.title, item.release_date, item.poster_path, item.overview);
-                    movie = singleRecipe
-                }
+        axios.get(url)
+            .then((result) => {
+                let movie = "";
+                result.data.results.forEach((item) => {
+                    if (item.title == name) {
+                        let singleRecipe = new Data(item.id, item.title, item.release_date, item.poster_path, item.overview);
+                        movie = singleRecipe
+                    }
 
+                })
+
+                res.status(200).send(movie);
             })
 
-            res.status(200).send(movie);
-        })
+            .catch((err) => {
+                console.log("sorry", err);
+                res.status(500).send(err);
+            })
 
-        .catch((err) => {
-            console.log("sorry", err);
-            res.status(500).send(err);
-        })
-
-     }
+    }
 
     catch (error) {
         console.log("sorry and error");
@@ -125,7 +132,36 @@ function errorHandler(erorr, req, res) {
     res.status(500).send(err);
 }
 
+function getMoviesHandler(req,res){
+    const sql=`SELECT * FROM favmovie;`;
+    client.query(sql).then((data) =>{
+        res.send(data.rows);
+    })
+    .catch(error=>{
+        errorHandler(error,req,res);
+    });
+}
 
-server.listen(PORT, () => {
-    console.log(`listening on ${PORT} : I am ready`);
+function addMoviesHandler(req,res){
+    const movie=req.body;
+    console.log(movie);
+    
+    const sql=`INSERT INTO favmovie (title,release_date,poster_path,overview) VALUES ($1,$2,$3,$4) RETURNING *;`;
+    console.log(sql);
+    const values=[movie.title,movie.release_date,movie.poster_path,movie.overview];
+    client.query(sql,values).then((data) =>{
+        res.send("data was added!");
+    })
+    .catch(error=>{
+        errorHandler(error,req,res);
+    });
+
+
+}
+
+client.connect().then(() => {
+    server.listen(PORT, () => {
+        console.log(`listening on ${PORT} : I am ready`);
+    })
 })
+
