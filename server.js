@@ -19,7 +19,7 @@ const error500 = require('./errors/error500.json');
 
 
 
-const PORT = 3000;
+const PORT = process.env.PORT||3000;
 
 //create an object from client constructor 
 const client = new pg.Client(process.env.DATABASE_URL);
