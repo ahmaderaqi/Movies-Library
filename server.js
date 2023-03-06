@@ -188,9 +188,12 @@ function updateFavMovie(req,res){
         errorHandler(err,req,res);
     })
 }
-client.connect().then(() => {
-    server.listen(PORT, () => {
-        console.log(`listening on ${PORT} : I am ready`);
-    })
+// client.connect().then(() => {
+//     server.listen(PORT, () => {
+//         console.log(`listening on ${PORT} : I am ready`);
+//     })
+// })
+server.listen(PORT, () => {
+    console.log(`listening on ${PORT} : I am ready`);
 })
 
