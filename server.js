@@ -150,9 +150,9 @@ function addMoviesHandler(req,res){
     const movie=req.body;
     console.log(movie);
     
-    const sql=`INSERT INTO favmovie (title,release_date,poster_path,overview) VALUES ($1,$2,$3,$4) RETURNING *;`;
+    const sql=`INSERT INTO favmovie (title,release_date,poster_path,overview,comment) VALUES ($1,$2,$3,$4,$5) RETURNING *;`;
     console.log(sql);
-    const values=[movie.title,movie.release_date,movie.poster_path,movie.overview];
+    const values=[movie.title,movie.release_date,movie.poster_path,movie.overview,movie.comment];
     client.query(sql,values).then((data) =>{
         res.send("data was added!");
     })
@@ -179,21 +179,19 @@ function deleteFavMovie(req,res) {
 function updateFavMovie(req,res){
     const id = req.params.id;
     const movie=req.body;
-    const sql=`UPDATE favMovie SET title=$1, release_date=$2, poster_path=$3 , overview=$4 WHERE id=${id} RETURNING *`;
-    const value=[movie.title,movie.release_date, movie.poster_path, movie.overview];
+    const sql=`UPDATE favMovie SET comment=$1 WHERE id=${id} RETURNING *`;
+    const value=[movie.comment];
     client.query(sql,value).then((data)=>{
         res.status(200).send(data.rows);
+        console.log(data.rows)
     })
     .catch((err)=>{
         errorHandler(err,req,res);
     })
 }
-// client.connect().then(() => {
-//     server.listen(PORT, () => {
-//         console.log(`listening on ${PORT} : I am ready`);
-//     })
-// })
-server.listen(PORT, () => {
-    console.log(`listening on ${PORT} : I am ready`);
+client.connect().then(() => {
+    server.listen(PORT, () => {
+        console.log(`listening on ${PORT} : I am ready`);
+    })
 })
 
