@@ -50,7 +50,7 @@ server.use(errorHandler);
 function homeHandler(req, res) {
     // let dd=new Data(data.title,data.poster_path,data.overview);
     console.log("ahmad");
-    res.status(200).json("home page");
+    res.status(200).json("home page11");
 }
 
 function favoriteHandler(req, res) {
